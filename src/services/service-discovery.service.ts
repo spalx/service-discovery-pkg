@@ -56,18 +56,18 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
 
     this.heartbeatTimer = setInterval(() => {
       this.runHeartbeats().catch((err) => {
-        logger.error('Service discovery heart beat loop error:', err);
+        logger.error('Service discovery heartbeat loop error:', err);
       });
     }, SERVICE_HEARTBEAT_INTERVAL);
 
-    logger.info(`Service discovery heart beat loop started (interval ${SERVICE_HEARTBEAT_INTERVAL}ms)`);
+    logger.info(`Service discovery heartbeat loop started (interval ${SERVICE_HEARTBEAT_INTERVAL}ms)`);
   }
 
   stopHeartbeatLoop(): void {
     if (this.heartbeatTimer) {
       clearInterval(this.heartbeatTimer);
       this.heartbeatTimer = null;
-      logger.info('Service discovery heart beat loop stopped');
+      logger.info('Service discovery heartbeat loop stopped');
     }
   }
 
