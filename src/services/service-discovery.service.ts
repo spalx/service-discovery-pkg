@@ -12,7 +12,7 @@ import {
 } from '../common/constants';
 
 class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
-  private registeredServices: Set<string> = new Set();
+  private registeredServices: Map<string, ServiceDTO> = new Map<string, ServiceDTO>();
   private heartbeatTimer: NodeJS.Timeout | null = null;
 
   async init(): Promise<void> {
@@ -36,7 +36,7 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
   async registerService(service: ServiceDTO): Promise<void> {
     await this.sendActionViaTransport(ServiceDiscoveryAction.RegisterService, service);
 
-    this.registeredServices.add(service.service_name);
+    this.registeredServices.set(service.service_name, service);
   }
 
   async deregisterService(name: string): Promise<void> {
@@ -45,8 +45,8 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
     this.registeredServices.delete(name);
   }
 
-  async serviceHeartbeat(name: string): Promise<void> {
-    await this.sendActionViaTransport(ServiceDiscoveryAction.ServiceHeartbeat, { service_name: name });
+  async serviceHeartbeat(service: ServiceDTO): Promise<void> {
+    await this.sendActionViaTransport(ServiceDiscoveryAction.ServiceHeartbeat, service);
   }
 
   startHeartbeatLoop(): void {
@@ -72,8 +72,8 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
   }
 
   private async runHeartbeats(): Promise<void> {
-    for (const serviceName of this.registeredServices) {
-      await this.serviceHeartbeat(serviceName);
+    for (const service of this.registeredServices.values()) {
+      await this.serviceHeartbeat(service);
     }
   }
 
