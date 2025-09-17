@@ -1,13 +1,28 @@
 import { v4 as uuidv4 } from 'uuid';
 import { CorrelatedMessage, TransportAwareService, transportService, TransportAdapterName } from 'transport-pkg';
 import { IAppPkg, AppRunPriority } from 'app-life-cycle-pkg';
+import { logger } from 'common-loggers-pkg';
 
 import { ServiceDTO } from '../types/service-discovery.dto';
-import { ServiceDiscoveryAction, SERVICE_DISCOVERY_PORT, SERVICE_DISCOVERY_HOST } from '../common/constants';
+import {
+  ServiceDiscoveryAction,
+  SERVICE_DISCOVERY_PORT,
+  SERVICE_DISCOVERY_HOST,
+  SERVICE_HEARTBEAT_INTERVAL
+} from '../common/constants';
 
 class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
+  private registeredServices: Set<string> = new Set();
+  private heartbeatTimer: NodeJS.Timeout | null = null;
+
   async init(): Promise<void> {
     this.useTransport(TransportAdapterName.HTTP, { host: SERVICE_DISCOVERY_HOST, port: SERVICE_DISCOVERY_PORT });
+
+    this.startHeartbeatLoop();
+  }
+
+  async shutdown(): Promise<void> {
+    this.stopHeartbeatLoop();
   }
 
   getPriority(): number {
@@ -20,10 +35,46 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
 
   async registerService(service: ServiceDTO): Promise<void> {
     await this.sendActionViaTransport(ServiceDiscoveryAction.RegisterService, service);
+
+    this.registeredServices.add(service.service_name);
   }
 
   async deregisterService(name: string): Promise<void> {
     await this.sendActionViaTransport(ServiceDiscoveryAction.DeregisterService, { service_name: name });
+
+    this.registeredServices.delete(name);
+  }
+
+  async serviceHeartbeat(name: string): Promise<void> {
+    await this.sendActionViaTransport(ServiceDiscoveryAction.ServiceHeartbeat, { service_name: name });
+  }
+
+  startHeartbeatLoop(): void {
+    if (this.heartbeatTimer) {
+      return;
+    }
+
+    this.heartbeatTimer = setInterval(() => {
+      this.runHeartbeats().catch((err) => {
+        logger.error('Service discovery heart beat loop error:', err);
+      });
+    }, SERVICE_HEARTBEAT_INTERVAL);
+
+    logger.info(`Service discovery heart beat loop started (interval ${SERVICE_HEARTBEAT_INTERVAL}ms)`);
+  }
+
+  stopHeartbeatLoop(): void {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+      logger.info('Service discovery heart beat loop stopped');
+    }
+  }
+
+  private async runHeartbeats(): Promise<void> {
+    for (const serviceName of this.registeredServices) {
+      await this.serviceHeartbeat(serviceName);
+    }
   }
 
   private async sendActionViaTransport(action: ServiceDiscoveryAction, data: object): Promise<object> {

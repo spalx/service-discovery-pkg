@@ -15,7 +15,6 @@ export interface ServiceDTO {
   service_name: string;
   host: string;
   port: number;
-  health_check_url?: string;
 }
 
 export const ServiceDTOSchema = z.object({
@@ -33,12 +32,6 @@ export const ServiceDTOSchema = z.object({
     required_error: "port is required",
     invalid_type_error: "port must be a number",
   }).int("port must be an integer").min(1, "port must be greater than 0"),
-
-  health_check_url: z.string({
-    invalid_type_error: "health_check_url must be a string"
-  }).optional().refine(val => val === undefined || val.trim() !== '', {
-    message: "health_check_url cannot be empty",
-  }),
 });
 
 export interface DeregisterServiceDTO {

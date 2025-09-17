@@ -1,6 +1,6 @@
 {
   "name": "service-discovery-pkg",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -8,6 +8,7 @@
   },
   "dependencies": {
     "app-life-cycle-pkg": "git+git@github.com:spalx/app-life-cycle-pkg.git#1.0.5",
+    "common-loggers-pkg": "git+git@github.com:spalx/common-loggers-pkg.git#1.0.3",
     "rest-pkg": "git+git@github.com:spalx/rest-pkg.git#1.0.3",
     "transport-pkg": "git+git@github.com:spalx/transport-pkg.git#1.1.5",
     "uuid": "^11.0.5",
