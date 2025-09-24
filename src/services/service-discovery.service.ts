@@ -29,6 +29,14 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
     return AppRunPriority.Highest;
   }
 
+  getName(): string {
+    return 'service-discovery';
+  }
+
+  getDependencies(): IAppPkg[] {
+    return [transportService];
+  }
+
   async getService(name: string): Promise<ServiceDTO> {
     return (await this.sendActionViaTransport(ServiceDiscoveryAction.GetService, { service_name: name }) as ServiceDTO);
   }
