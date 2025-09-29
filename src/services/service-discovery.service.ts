@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CorrelatedMessage, TransportAwareService, transportService, TransportAdapterName } from 'transport-pkg';
+import { CorrelatedMessage, TransportAwareService, transportService, TransportAdapterName, CircuitBreaker } from 'transport-pkg';
 import { IAppPkg, AppRunPriority } from 'app-life-cycle-pkg';
 import { logger } from 'common-loggers-pkg';
 
@@ -14,6 +14,20 @@ import {
 class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
   private registeredServices: Map<string, ServiceDTO> = new Map<string, ServiceDTO>();
   private heartbeatTimer: NodeJS.Timeout | null = null;
+  private sendBreaker: CircuitBreaker<[CorrelatedMessage, Record<string, unknown>], CorrelatedMessage>;
+
+  constructor() {
+    super();
+
+    this.sendBreaker = new CircuitBreaker<[CorrelatedMessage, Record<string, unknown>], CorrelatedMessage>(
+      (req, options) => transportService.send(req, options),
+      {
+        timeout: 2000,
+        errorThresholdPercentage: 50,
+        retryTimeout: 5000,
+      }
+    );
+  }
 
   async init(): Promise<void> {
     this.useTransport(TransportAdapterName.HTTP, { host: SERVICE_DISCOVERY_HOST, port: SERVICE_DISCOVERY_PORT });
@@ -93,7 +107,7 @@ class ServiceDiscoveryService extends TransportAwareService implements IAppPkg {
       data
     );
 
-    const response: CorrelatedMessage = await transportService.send(message, this.getActiveTransportOptions());
+    const response: CorrelatedMessage = await this.sendBreaker.exec(message, this.getActiveTransportOptions());
     return response.data;
   }
 }
