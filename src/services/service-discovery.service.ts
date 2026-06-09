@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import { CorrelatedMessage, TransportAwareService, transportService, TransportAdapterName, CircuitBreaker } from 'transport-pkg';
-import { IAppPkg, AppRunPriority } from 'app-life-cycle-pkg';
-import { logger } from 'common-loggers-pkg';
+import { CorrelatedMessage, TransportAwareService, transportService, TransportAdapterName, CircuitBreaker } from '@spalx/transport-pkg';
+import { IAppPkg, AppRunPriority } from '@spalx/app-life-cycle-pkg';
+import { logger } from '@spalx/common-loggers-pkg';
 
 import { ServiceDTO } from '../types/service-discovery.dto';
 import {
