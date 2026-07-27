@@ -1,6 +1,6 @@
 {
   "name": "@spalx/service-discovery-pkg",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
@@ -9,7 +9,7 @@
   "dependencies": {
     "@spalx/app-life-cycle-pkg": "^1.0.8",
     "@spalx/common-loggers-pkg": "^1.0.5",
-    "@spalx/transport-pkg": "^1.2.2",
+    "@spalx/transport-pkg": "^1.2.3",
     "uuid": "^14.0.0",
     "zod": "^4.1.12"
   },
